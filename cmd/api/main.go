@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/Leonfarhan/simple-social/internal/store"
 	"github.com/joho/godotenv"
 )
 
@@ -18,6 +19,7 @@ func main() {
 
 	app := &application{
 		config: cfg,
+		store: store.NewPostgresStorage(nil),
 	}
 
 	log.Fatal(app.run(app.mount()))
