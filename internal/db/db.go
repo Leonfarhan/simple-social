@@ -1,0 +1,35 @@
+package db
+
+import (
+	"context"
+	"database/sql"
+	"os"
+	"time"
+)
+
+func New(addr, maxIdleTime string, maxOpenConns, maxIdleConns int) (*sql.DB, error) {
+	db, err := sql.Open("postgres", os.Getenv("DB_ADDR"))
+
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetMaxOpenConns(maxOpenConns)
+	db.SetConnMaxIdleTime(time.Duration(maxIdleConns))
+
+	duration, err := time.ParseDuration(maxIdleTime)
+	if err != nil {
+		return nil, err
+	}
+
+	db.SetConnMaxIdleTime(duration)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
+		return nil, err
+	}
+
+	return db, nil
+}
