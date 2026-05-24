@@ -9,6 +9,8 @@ import (
 	"github.com/joho/godotenv"
 )
 
+const version = "0.0.1"
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
@@ -22,6 +24,7 @@ func main() {
 			maxIdleConns: 30,
 			maxIdleTime:  "15m",
 		},
+		env: os.Getenv("ENV"),
 	}
 
 	db, err := db.New(
