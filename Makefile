@@ -13,6 +13,10 @@ migrate-up:
 migrate-down:
 	@migrate -path=$(MIGRATION_PATH) -database=$(DB_ADDR) down $(filter-out $@, $(MAKECMDGOALS))
 
+.PHONY: dev
+dev:
+	@colima start && docker compose up -d && air
+
 # Catch-all target to prevent make from complaining about extra arguments
 %:
 	@:
