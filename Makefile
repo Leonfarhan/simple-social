@@ -13,6 +13,10 @@ migrate-up:
 migrate-down:
 	@migrate -path=$(MIGRATION_PATH) -database=$(DB_ADDR) down $(filter-out $@, $(MAKECMDGOALS))
 
+.PHONY: seed
+seed:
+	@go run ./cmd/migrate/seed
+
 .PHONY: dev
 dev:
 	@colima start && docker compose up -d && air
