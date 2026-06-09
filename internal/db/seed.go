@@ -2,95 +2,114 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
-	"math/rand/v2"
-	"strconv"
+
+	"math/rand"
 
 	"github.com/Leonfarhan/simple-social/internal/store"
 )
 
-var userList = []string{
-	"olivia", "liam", "emma", "noah", "ava", "elijah", "sophia", "lucas", "isabella", "mason",
-	"mia", "logan", "charlotte", "ethan", "amelia", "james", "harper", "aiden", "evelyn", "jackson",
-	"abigail", "sebastian", "ella", "mateo", "scarlett", "jack", "grace", "owen", "chloe", "theodore",
-	"victoria", "levi", "riley", "henry", "aria", "wyatt", "lily", "julian", "aurora", "leo",
-	"zoey", "hudson", "nora", "ezra", "hannah", "lincoln", "ellie", "grayson", "layla", "isaac",
+var usernames = []string{
+	"aditya", "bima", "citra", "dewi", "eka", "farhan", "gita", "hani",
+	"indra", "joko", "kirana", "luthfi", "maira", "nanda", "okta", "putri",
+	"qori", "raka", "salsa", "tio", "ulfa", "vito", "wulan", "yoga",
+	"zara", "bayu", "cahya", "dimas", "elisa", "fajar", "gina", "haris",
+	"intan", "jihan", "kemal", "laras", "miko", "nabila", "osman", "prabu",
+	"ratna", "satria", "tasya", "umar", "vania", "wahyu", "yudha", "zahra",
 }
 
-var titleList = []string{
-	"Morning coffee thoughts", "Weekend hiking plan", "Learning Go today", "Favorite street food", "Late night coding",
-	"Simple productivity tips", "New book recommendation", "Travel bucket list", "Home workout routine", "Music for focus",
-	"Quick dinner recipe", "Small wins today", "Movie night picks", "Garden update", "Remote work setup",
-	"Daily photo dump", "Fresh playlist drop", "Study session notes", "Local cafe review", "Sunset walk story",
-	"Weekend project log", "Healthy habit check", "Tech news recap", "Pet moments", "Random life update",
+var titles = []string{
+	"Catatan Pagi di Kedai Kopi", "Tips Menata Meja Kerja Kecil", "Belajar Konsisten Berolahraga",
+	"Rute Jalan Kaki Favorit", "Resep Bekal Praktis", "Cara Mengatur Waktu Belajar",
+	"Pengalaman Naik Kereta Malam", "Ide Liburan Hemat di Kota Sendiri", "Merawat Tanaman di Balkon",
+	"Playlist Fokus untuk Bekerja", "Membaca Buku Sebelum Tidur", "Kebiasaan Finansial Sehat",
+	"Menulis Jurnal Tanpa Ribet", "Mencoba Hobi Baru Akhir Pekan", "Menjaga Koneksi dengan Teman",
+	"Membersihkan Rumah dalam 30 Menit", "Belajar Memasak dari Nol", "Mengurangi Distraksi Digital",
+	"Menikmati Hujan dari Teras", "Rencana Kecil untuk Minggu Ini",
 }
 
-var contentList = []string{
-	"Started the day with a small win.", "Trying a new routine this week.", "Found a quiet spot to recharge.",
-	"Sharing notes from a recent lesson.", "Planning something fun for the weekend.", "Taking a short break before the next task.",
-	"Found a simple way to stay focused.", "Cooked something quick and tasty.", "Listening to a playlist that keeps me moving.",
-	"Reading a chapter that feels useful.", "Taking a walk to clear my head.", "Writing down ideas before they disappear.",
-	"Enjoying slow progress and consistency.", "Testing a new setup at home.", "Saving this moment for later.",
-	"Looking back at what worked today.", "Trying to keep things simple.", "Learning from a small mistake.",
-	"Spending time on a tiny project.", "Checking in after a busy day.", "Finding inspiration in ordinary things.",
-	"Making room for a better habit.", "Sharing a quick update with everyone.", "Ending the day with gratitude.",
-	"Keeping this one short and honest.",
+var contents = []string{
+	"Pagi ini dimulai pelan dengan kopi hangat, buku catatan, dan rencana sederhana untuk menjalani hari.",
+	"Meja kerja kecil tetap bisa nyaman kalau barang yang sering dipakai mudah dijangkau dan sisanya disimpan rapi.",
+	"Olahraga terasa lebih ringan saat targetnya realistis, durasinya pendek, dan dilakukan pada jam yang sama.",
+	"Jalan kaki di sekitar kompleks memberi jeda dari layar sekaligus membantu menemukan sudut kota yang sering terlewat.",
+	"Bekal praktis tidak perlu rumit; nasi, lauk sederhana, dan sayur cepat tumis sudah cukup untuk hari sibuk.",
+	"Waktu belajar lebih terkendali saat materi dipecah menjadi bagian kecil dan diberi jeda istirahat yang jelas.",
+	"Perjalanan kereta malam selalu punya cerita sendiri, dari suara rel sampai obrolan singkat dengan penumpang lain.",
+	"Liburan hemat bisa dimulai dari museum, taman kota, atau kedai kecil yang belum pernah dikunjungi sebelumnya.",
+	"Tanaman balkon butuh cahaya cukup, jadwal siram yang konsisten, dan pot dengan drainase yang tidak tersumbat.",
+	"Playlist yang tepat membantu masuk ke mode fokus tanpa harus memaksa diri bekerja terlalu keras di awal.",
+	"Membaca beberapa halaman sebelum tidur menjadi cara sederhana untuk menutup hari tanpa terburu-buru.",
+	"Mencatat pemasukan dan pengeluaran kecil membuat keputusan finansial harian lebih sadar dan tidak asal lewat.",
+	"Jurnal tidak harus panjang; tiga kalimat tentang kejadian, perasaan, dan rencana besok sudah bisa membantu.",
+	"Akhir pekan ini cocok dipakai mencoba hobi baru tanpa target harus mahir sejak percobaan pertama.",
+	"Menjaga pertemanan kadang cukup dengan pesan singkat, ajakan makan, atau menanyakan kabar dengan tulus.",
+	"Rumah terasa lebih lega setelah fokus membersihkan satu area kecil selama tiga puluh menit tanpa distraksi.",
+	"Memasak dari nol dimulai dari resep sederhana, bahan yang mudah ditemukan, dan keberanian untuk gagal sedikit.",
+	"Mengurangi distraksi digital bisa dimulai dengan mematikan notifikasi yang tidak penting selama jam produktif.",
+	"Hujan sore di teras mengingatkan bahwa tidak semua waktu harus diisi dengan rencana besar.",
+	"Minggu ini cukup dimulai dengan tiga prioritas kecil yang jelas, terukur, dan benar-benar mungkin dikerjakan.",
 }
 
-var tagsList = []string{
-	"go", "backend", "api", "database", "postgres", "web", "coding", "learning",
-	"productivity", "travel", "food", "music", "books", "fitness", "movies", "nature",
-	"photography", "work", "study", "lifestyle", "tech", "pets", "weekend", "coffee",
-	"daily",
+var tags = []string{
+	"Keseharian", "Produktivitas", "Kesehatan", "Perjalanan", "Masakan",
+	"Belajar", "Liburan", "Tanaman", "Musik", "Buku",
+	"Keuangan", "Jurnal", "Hobi", "Pertemanan", "Rumah",
+	"Memasak", "Digital", "Refleksi", "Rencana", "Kopi",
 }
 
-var commentList = []string{
-	"Nice update!", "Thanks for sharing.", "This is really helpful.", "I can relate to this.", "Great point.",
-	"Love this idea.", "Keep it up!", "This made my day.", "Interesting perspective.", "Saving this one.",
-	"Well said.", "That sounds fun.", "I should try this too.", "Good reminder.", "Looks awesome.",
-	"Totally agree.", "This is inspiring.", "Simple but useful.", "Glad you posted this.", "Very cool.",
-	"That makes sense.", "What a nice moment.", "Appreciate the update.", "This feels familiar.", "Great share.",
+var comments = []string{
+	"Relate banget, terima kasih sudah berbagi.",
+	"Bagian ini paling kena buatku.",
+	"Tulisannya ringan tapi tetap bermanfaat.",
+	"Aku mau coba tips ini minggu ini.",
+	"Setuju, kadang yang sederhana justru paling membantu.",
+	"Pengalamanmu menarik, jadi kepikiran hal yang sama.",
+	"Terima kasih, ini pas dengan yang sedang aku cari.",
+	"Suka cara kamu menjelaskannya.",
+	"Catatan kecil begini enak dibaca.",
+	"Semoga bisa konsisten juga setelah baca ini.",
 }
 
-func Seed(storage store.Storage) error {
+func Seed(store store.Storage, _ *sql.DB) {
 	ctx := context.Background()
 
-	users := generateUsers(50)
+	users := generateUsers(100)
 	for _, user := range users {
-		if err := storage.Users.Create(ctx, user); err != nil {
-			return fmt.Errorf("seed users: %w", err)
+		if err := store.Users.Create(ctx, user); err != nil {
+			log.Println("Error creating user:", err)
+			return
 		}
 	}
 
-	posts := generatePosts(25, users)
+	posts := generatePosts(200, users)
 	for _, post := range posts {
-		if err := storage.Posts.Create(ctx, post); err != nil {
-			return fmt.Errorf("seed posts: %w", err)
+		if err := store.Posts.Create(ctx, post); err != nil {
+			log.Println("Error creating post:", err)
+			return
 		}
 	}
 
-	comments := generateComments(200, users, posts)
+	comments := generateComments(500, users, posts)
 	for _, comment := range comments {
-		if err := storage.Comments.Create(ctx, comment); err != nil {
-			return fmt.Errorf("seed comments: %w", err)
+		if err := store.Comments.Create(ctx, comment); err != nil {
+			log.Println("Error creating comment:", err)
+			return
 		}
 	}
 
-	log.Println("Seeding complete!")
-	return nil
+	log.Println("Seeding complete")
 }
 
 func generateUsers(num int) []*store.User {
 	users := make([]*store.User, num)
 
-	for i := range num {
-		name := userList[i%len(userList)] + strconv.Itoa(i+1)
-
+	for i := 0; i < num; i++ {
 		users[i] = &store.User{
-			Username: name,
-			Email:    name + "@mail.com",
-			Password: "123456",
+			Username: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
+			Email:    usernames[i%len(usernames)] + fmt.Sprintf("%d", i) + "@example.com",
 		}
 	}
 
@@ -99,17 +118,16 @@ func generateUsers(num int) []*store.User {
 
 func generatePosts(num int, users []*store.User) []*store.Post {
 	posts := make([]*store.Post, num)
-
-	for i := range num {
-		user := users[rand.IntN(len(users))]
+	for i := 0; i < num; i++ {
+		user := users[rand.Intn(len(users))]
 
 		posts[i] = &store.Post{
 			UserID:  user.ID,
-			Title:   titleList[rand.IntN(len(titleList))],
-			Content: contentList[rand.IntN(len(contentList))],
+			Title:   titles[rand.Intn(len(titles))],
+			Content: titles[rand.Intn(len(contents))],
 			Tags: []string{
-				tagsList[rand.IntN(len(tagsList))],
-				tagsList[rand.IntN(len(tagsList))],
+				tags[rand.Intn(len(tags))],
+				tags[rand.Intn(len(tags))],
 			},
 		}
 	}
@@ -118,15 +136,13 @@ func generatePosts(num int, users []*store.User) []*store.Post {
 }
 
 func generateComments(num int, users []*store.User, posts []*store.Post) []*store.Comment {
-	comment := make([]*store.Comment, num)
-
-	for i := range num {
-		comment[i] = &store.Comment{
-			PostID:  posts[rand.IntN(len(posts))].ID,
-			UserID:  users[rand.IntN(len(users))].ID,
-			Content: commentList[rand.IntN(len(commentList))],
+	cms := make([]*store.Comment, num)
+	for i := 0; i < num; i++ {
+		cms[i] = &store.Comment{
+			PostID:  posts[rand.Intn(len(posts))].ID,
+			UserID:  users[rand.Intn(len(users))].ID,
+			Content: comments[rand.Intn(len(comments))],
 		}
 	}
-
-	return comment
+	return cms
 }
