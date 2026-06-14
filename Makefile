@@ -1,4 +1,6 @@
 include .env
+export
+
 MIGRATION_PATH = cmd/migrate/migrations
 
 .PHONY: migrate-create
@@ -16,6 +18,10 @@ migrate-down:
 .PHONY: seed
 seed:
 	@go run ./cmd/migrate/seed
+
+.PHONY: migrate-force
+migrate-force:
+	@migrate -path=$(MIGRATION_PATH) -database=$(DB_ADDR) force $(filter-out $@,$(MAKECMDGOALS))
 
 .PHONY: dev
 dev:
