@@ -30,7 +30,7 @@ type PostStore struct {
 	db *sql.DB
 }
 
-func (s PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMetadata, error) {
+func (s PostStore) GetUserFeed(ctx context.Context, userID int64, fq PaginatedFeedQuery) ([]PostWithMetadata, error) {
 	query := `
 		SELECT
 			p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags, u.username,
@@ -38,16 +38,42 @@ func (s PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMet
 		FROM posts p
 		LEFT JOIN comments c ON c.post_id = p.id
 		LEFT JOIN users u ON p.user_id = u.id
-		JOIN followers f ON f.follower_id = p.user_id OR p.user_id = $1
-		WHERE f.user_id = $1 OR p.user_id = $1
+		WHERE p.user_id = $1
+		   OR EXISTS (
+			   SELECT 1
+			   FROM followers f
+			   WHERE f.follower_id = $1
+			     AND f.user_id = p.user_id
+		   )
 		GROUP BY p.id, u.username
-		ORDER BY p.created_at DESC;
+		ORDER BY p.created_at DESC
+		LIMIT $2 OFFSET $3;
 	`
+	if fq.Sort == "asc" {
+		query = `
+			SELECT
+				p.id, p.user_id, p.title, p.content, p.created_at, p.version, p.tags, u.username,
+				COUNT(c.id) AS comments_count
+			FROM posts p
+			LEFT JOIN comments c ON c.post_id = p.id
+			LEFT JOIN users u ON p.user_id = u.id
+			WHERE p.user_id = $1
+			   OR EXISTS (
+				   SELECT 1
+				   FROM followers f
+				   WHERE f.follower_id = $1
+				     AND f.user_id = p.user_id
+			   )
+			GROUP BY p.id, u.username
+			ORDER BY p.created_at ASC
+			LIMIT $2 OFFSET $3;
+		`
+	}
 
 	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
 	defer cancel()
 
-	rows, err := s.db.QueryContext(ctx, query, userID)
+	rows, err := s.db.QueryContext(ctx, query, userID, fq.Limit, fq.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -74,6 +100,10 @@ func (s PostStore) GetUserFeed(ctx context.Context, userID int64) ([]PostWithMet
 		}
 
 		feed = append(feed, p)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return feed, nil
