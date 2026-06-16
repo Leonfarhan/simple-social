@@ -14,7 +14,8 @@ func (app *application) getUserFeedHandler(w http.ResponseWriter, r *http.Reques
 		Sort:   "desc",
 	}
 
-	if err := fq.Parse(r); err != nil {
+	fq, err := fq.Parse(r)
+	if err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
