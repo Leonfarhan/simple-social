@@ -11,13 +11,33 @@ import (
 
 const version = "0.0.1"
 
+//	@title			Simple Social API
+//	@version		1.0
+//	@description	This is API for a simple social media, you can follow like social media in general.
+//	@termsOfService	http://swagger.io/terms/
+
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+//	@license.name	Apache 2.0
+//	@license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+
+//	@BasePath					/v1
+//
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						Authorization
+//	@description
+
 func main() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
 	cfg := config{
-		addr: os.Getenv("ADDR"),
+		addr:   os.Getenv("ADDR"),
+		apiURL: os.Getenv("EXTERNAL_URL"),
 		db: dbConfig{
 			addr:         os.Getenv("DB_ADDR"),
 			maxOpenConns: 30,

@@ -9,7 +9,7 @@ import (
 
 var Validate *validator.Validate
 
-func init(){
+func init() {
 	Validate = validator.New(validator.WithRequiredStructEnabled())
 }
 
@@ -23,7 +23,7 @@ func writeJSON(w http.ResponseWriter, status int, data any) error {
 func readJSON(w http.ResponseWriter, r *http.Request, data any) error {
 	maxbyte := 1_048_576 // 1mb
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxbyte))
-	
+
 	decoder := json.NewDecoder(r.Body)
 	decoder.DisallowUnknownFields()
 
@@ -35,7 +35,7 @@ func writeJSONError(w http.ResponseWriter, status int, message string) error {
 		Error string `json:"error"`
 	}
 
-	return writeJSON(w, status, &envelope{ Error: message })
+	return writeJSON(w, status, &envelope{Error: message})
 }
 
 func (app *application) jsonResponse(w http.ResponseWriter, status int, data any) error {

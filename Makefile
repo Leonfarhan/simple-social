@@ -27,6 +27,11 @@ migrate-force:
 dev:
 	@colima start && docker compose up -d && air
 
+.PHONY: gen-docs
+gen-docs:
+	@swag fmt -g main.go -d ./cmd/api,./internal/store
+	@swag init -g main.go -d ./cmd/api,./internal/store
+
 # Catch-all target to prevent make from complaining about extra arguments
 %:
 	@:
