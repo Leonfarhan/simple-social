@@ -106,7 +106,7 @@ func Seed(store store.Storage, _ *sql.DB) {
 func generateUsers(num int) []*store.User {
 	users := make([]*store.User, num)
 
-	for i := 0; i < num; i++ {
+	for i := range num {
 		users[i] = &store.User{
 			Username: usernames[i%len(usernames)] + fmt.Sprintf("%d", i),
 			Email:    usernames[i%len(usernames)] + fmt.Sprintf("%d", i) + "@example.com",
@@ -118,7 +118,7 @@ func generateUsers(num int) []*store.User {
 
 func generatePosts(num int, users []*store.User) []*store.Post {
 	posts := make([]*store.Post, num)
-	for i := 0; i < num; i++ {
+	for i := range num {
 		user := users[rand.Intn(len(users))]
 
 		posts[i] = &store.Post{
@@ -137,7 +137,7 @@ func generatePosts(num int, users []*store.User) []*store.Post {
 
 func generateComments(num int, users []*store.User, posts []*store.Post) []*store.Comment {
 	cms := make([]*store.Comment, num)
-	for i := 0; i < num; i++ {
+	for i := range num {
 		cms[i] = &store.Comment{
 			PostID:  posts[rand.Intn(len(posts))].ID,
 			UserID:  users[rand.Intn(len(users))].ID,
