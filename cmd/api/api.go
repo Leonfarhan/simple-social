@@ -68,6 +68,11 @@ func (app *application) mount() *chi.Mux {
 				r.Put("/unfollow", app.unfollowUserHandler)
 			})
 		})
+
+		// Public routes
+		r.Route("/authentication", func(r chi.Router) {
+			r.Post("/user", app.registerUserHandler)
+		})
 	})
 
 	return r
