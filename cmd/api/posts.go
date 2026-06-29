@@ -35,6 +35,12 @@ type CreatePostPayload struct {
 //	@Router			/posts [post]
 func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreatePostPayload
+	user := getUserFromContext(r)
+	if user == nil {
+		app.unauthorizedErrorResponse(w, r, store.ErrNotFound)
+		return
+	}
+
 	ctx := r.Context()
 
 	if err := readJSON(w, r, &payload); err != nil {
@@ -51,8 +57,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		Title:   payload.Title,
 		Content: payload.Content,
 		Tags:    payload.Tags,
-		// change after auth for this user id
-		UserID: 1,
+		UserID:  user.ID,
 	}
 
 	if err := app.store.Posts.Create(ctx, post); err != nil {
@@ -60,7 +65,7 @@ func (app *application) createPostHandler(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	if err := writeJSON(w, http.StatusCreated, post); err != nil {
+	if err := app.jsonResponse(w, http.StatusCreated, post); err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}

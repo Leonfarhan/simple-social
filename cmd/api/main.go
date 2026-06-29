@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"time"
 
 	"github.com/Leonfarhan/simple-social/internal/db"
 	"github.com/Leonfarhan/simple-social/internal/store"
@@ -46,6 +47,9 @@ func main() {
 			maxIdleTime:  "15m",
 		},
 		env: os.Getenv("ENV"),
+		mail: mailConfig{
+			exp: time.Hour * 24 * 3, // 3 days
+		},
 	}
 
 	// Logger
