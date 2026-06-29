@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Leonfarhan/simple-social/internal/db"
+	"github.com/Leonfarhan/simple-social/internal/mailer"
 	"github.com/Leonfarhan/simple-social/internal/store"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
@@ -38,8 +39,9 @@ func main() {
 	}
 
 	cfg := config{
-		addr:   os.Getenv("ADDR"),
-		apiURL: os.Getenv("EXTERNAL_URL"),
+		addr:        os.Getenv("ADDR"),
+		apiURL:      os.Getenv("EXTERNAL_URL"),
+		frontendURL: os.Getenv("FRONTEND_URL"),
 		db: dbConfig{
 			addr:         os.Getenv("DB_ADDR"),
 			maxOpenConns: 30,
@@ -48,7 +50,14 @@ func main() {
 		},
 		env: os.Getenv("ENV"),
 		mail: mailConfig{
-			exp: time.Hour * 24 * 3, // 3 days
+			exp:       time.Hour * 24 * 3, // 3 days
+			fromEmail: os.Getenv("FROM_EMAIL"),
+			sendGrid: sendGridConfig{
+				apiKey: os.Getenv("SENDGRID_API_KEY"),
+			},
+			mailTrap: mailTrapConfig{
+				apiKey: os.Getenv("MAILTRAP_API_KEY"),
+			},
 		},
 	}
 
@@ -71,10 +80,18 @@ func main() {
 	defer db.Close()
 	logger.Info("database connection pool established")
 
+	// Mailer
+	// mailer := mailer.NewSendgrid(cfg.mail.sendGrid.apiKey, cfg.mail.fromEmail)
+	mailtrap, err := mailer.NewMailTrapClient(cfg.mail.mailTrap.apiKey, cfg.mail.fromEmail)
+	if err != nil {
+		logger.Fatal(err)
+	}
+
 	app := &application{
 		config: cfg,
 		store:  store.NewPostgresStorage(db),
 		logger: logger,
+		mailer: mailtrap,
 	}
 
 	logger.Fatal(app.run(app.mount()))

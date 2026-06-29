@@ -47,12 +47,26 @@ cp .env.example .env
 Default local configuration:
 
 ```env
-ADDR=":8080"
+ADDR=:8080
+DB_ADDR=
+EXTERNAL_URL=localhost:8080
+FRONTEND_URL=http://localhost:5173
+ENV=development
+FROM_EMAIL=
+MAILTRAP_API_KEY=
+SENDGRID_API_KEY=
 ```
 
 | Variable | Description | Example |
 | --- | --- | --- |
-| `ADDR` | Address used by the HTTP server | `":8080"` |
+| `ADDR` | Address used by the HTTP server | `:8080` |
+| `DB_ADDR` | PostgreSQL connection string | `postgres://admin:adminpassword@localhost/socialnetwork?sslmode=disable` |
+| `EXTERNAL_URL` | Public API host used by generated Swagger docs | `localhost:8080` |
+| `FRONTEND_URL` | Frontend origin used to build activation links | `http://localhost:5173` |
+| `ENV` | Runtime environment; `production` disables email sandbox mode | `development` |
+| `FROM_EMAIL` | Sender address used by Mailtrap or SendGrid | `noreply@example.com` |
+| `MAILTRAP_API_KEY` | Mailtrap SMTP API key used by the active mailer | `mailtrap-api-key` |
+| `SENDGRID_API_KEY` | SendGrid API key kept for parity with upstream implementation | `sendgrid-api-key` |
 
 ## Getting Started
 

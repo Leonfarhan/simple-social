@@ -35,7 +35,7 @@ definitions:
         maxLength: 255
         type: string
       password:
-        maxLength: 100
+        maxLength: 72
         minLength: 3
         type: string
       username:
@@ -53,6 +53,21 @@ definitions:
         type: string
       title:
         maxLength: 100
+        type: string
+    type: object
+  main.UserWithToken:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      token:
+        type: string
+      username:
         type: string
     type: object
   store.Comment:
@@ -173,7 +188,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/store.User'
+            $ref: '#/definitions/main.UserWithToken'
         "400":
           description: Bad Request
           schema: {}
